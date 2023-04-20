@@ -86,31 +86,6 @@ bool PensumReading(char* &Courses, int* &IDECourses, int* &HRSCourses, int* &Ind
         }
         IndexCourses[0] = 0;
         Courses[PosCharacters] = '\0';
-
-        /*for(int i = 0; i < SizeCCourses; i++){            //Imprimir todas las horas
-            cout << Courses[i];
-        }
-
-        cout<<endl<<endl;
-
-        for (int i = 0; i<NumCourses; i++){                 //Imprimir posicion de curso
-            cout << IndexCourses[i]<< endl;
-        }
-        cout<<endl<<endl;
-
-        for (int i = 0; i<NumCourses; i++){                 //Imprimir IDE
-            cout << IDECourses[i]<< endl;
-        }
-
-        cout<<endl<<endl;
-
-        for(int i = 0; i < NumCourses*4; i++){            //Imprimir todas las horas
-            cout << HRSCourses[i];
-            if ((i+1)%4 == 0){
-                cout << endl;
-            }
-        }
-        */
         FilePensum.close();
         ToolsCourses[0] = SizeCCourses;
         ToolsCourses[1] = NumCourses;
@@ -161,13 +136,13 @@ int* CoursesOptions(char* &Courses, int* &IndexCourses, int* &ToolsCourses, int*
 
         cout << "Ingrese la materia a matricular por su indice: ";
         cin >> IndexM;
-        cout << "\033[F\033[K"; // Mover el cursor a la línea anterior y borrarla
+        cout << "\033[F\033[K";
 
         while(IndexM < 0 || IndexM > (ToolsCourses[1] - 1)){
             cout << "Opcion Invalida, use los indice de la lista: ";
             cin >> IndexM;
             cin.ignore();
-            cout << "\033[F\033[K"; // Mover el cursor a la línea anterior y borrarla
+            cout << "\033[F\033[K";
         }
 
         bool Run = true;
@@ -265,58 +240,102 @@ int* CoursesOptions(char* &Courses, int* &IndexCourses, int* &ToolsCourses, int*
     return ChosenCourses;
 }
 
-void SaveMatrix(int* ScheduleMatrix, char* outputFilename){
-    // ...
-    std::ofstream outputFile("sintítulo.txt"); // abrir el archivo de salida
+bool ScheduleAvailability(int* ScheduleMatrix, int DayAux, int Hours, int ClassTime){
+
+
+
+    int FinalIndex = (DayAux*16) + 16;
+
+    for(int i = 0 ; i < Hours; i ++){
+        int Index = ((DayAux*16) + (ClassTime - 6)) + i;
+        cout <<ScheduleMatrix[Index];
+        if(ScheduleMatrix[Index] != -1){
+            cout << "No hay disponibilidad para esas horas";
+            return false;
+        }
+        else if(Index >= FinalIndex){
+            cout << "Muy tarde, interfiere con la hora de sueno";
+            return false;
+        }
+
+    }
+    return true;
+}
+
+void UpdateMatrix(int* ScheduleMatrix, int* IDECourses, int ChosenCourses, int DayAux, int Hours, int ClassTime){
+
+    for(int i = 0 ; i < Hours; i ++){
+        ScheduleMatrix[((DayAux*16) + (ClassTime - 6)) + i] = IDECourses[ChosenCourses];
+    }
+
+}
+
+void ClassSchedules(int* &HRS){
+
+    cout << "\nHoras Teoricas: " << HRS[0];
+    cout << "\nHoras Practicas: " << HRS[1];
+    cout << "\nHoras Teorico-Practicas: " << HRS[2];
+    cout << endl;
+
+}
+
+void SaveMatrix(int* ScheduleMatrix, int* HoursStudy){
+
+    ofstream ScheduleFile("sintítulo.txt");
     int Rows = 16;
     int Columns = 7;
     char CenterDivision[] = "╠═══════════╬═══════════╬═══════════╬═══════════╬═══════════╬═══════════╬═══════════╬═══════════╣";
     char LowerDivision[]  = "╚═══════════╩═══════════╩═══════════╩═══════════╩═══════════╩═══════════╩═══════════╩═══════════╝";
 
-    // escribir la salida en el archivo en lugar de la consola
-    outputFile << "╔═══════════╦═══════════╦═══════════╦═══════════╦═══════════╦═══════════╦═══════════╦═══════════╗\n"
-                  "║   HORAS   ║   LUNES   ║  MARTES   ║ MIERCOLES ║  JUEVES   ║  VIERNES  ║  SABADO   ║  DOMINGO  ║\n"
-                  "╠═══════════╬═══════════╬═══════════╬═══════════╬═══════════╬═══════════╬═══════════╬═══════════╣";
-    for (int i = 0; i < Rows; i++){
 
-        outputFile << "\n║";
+    ScheduleFile << "╔═══════════╦═══════════╦═══════════╦═══════════╦═══════════╦═══════════╦═══════════╦═══════════╗\n"
+                    "║   HORAS   ║   LUNES   ║  MARTES   ║ MIERCOLES ║  JUEVES   ║  VIERNES  ║  SABADO   ║  DOMINGO  ║";
+    for (int i = 0; i < Rows; i++){
+        ScheduleFile << endl << CenterDivision;
+
+        ScheduleFile << "\n║";
         if (i < 4){
-            outputFile << "   0" << (6 + i) << ":00   ║";
+            ScheduleFile << "   0" << (6 + i) << ":00   ║";
         }
         else{
-            outputFile << "   " << (6 + i) << ":00   ║";
+            ScheduleFile << "   " << (6 + i) << ":00   ║";
         }
 
         for(int j = 0; j < Columns; j++){
-            int Index = (i* Columns) + j;
-            outputFile << "  ";
-            if(ScheduleMatrix[Index] == 0){
-                outputFile << "         ║";
+            int Index = j * Rows + i;
+
+            ScheduleFile << "  ";
+            for (int k = 0; HoursStudy[k] != -1; k++){
+                if (Index == HoursStudy[k]){
+                    ScheduleFile.seekp(-1, std::ios::cur);
+                    ScheduleFile <<"*";
+                    break;
+                }
+            }
+            if(ScheduleMatrix[Index] == -1){
+                ScheduleFile << "         ║";
             }
             else{
-                outputFile << ScheduleMatrix[Index]<< "  ║";
+                ScheduleFile << ScheduleMatrix[Index]<< "  ║";
             }
-        }
-        if(i == Rows-1){
-            break;
-        }
 
-        outputFile << endl << CenterDivision;
+        }
     }
-    outputFile << endl << LowerDivision;
+    ScheduleFile << endl << LowerDivision << endl;
+    ScheduleFile << endl << "Codigo  : Horas de clase\n*Codigo : Horas de estudio";
 
-    outputFile.close(); // cerrar el archivo
+    ScheduleFile.close();
 }
 
-void PrintMatrix(int* ScheduleMatrix){
+void PrintMatrix(int* ScheduleMatrix, int* HoursStudy){
 
     int Rows = 16;
     int Columns = 7;
     char Division[] = "+-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+";
 
     cout << "+-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+\n"
-                  "|   HORAS   |   LUNES   |  MARTES   | MIERCOLES |  JUEVES   |  VIERNES  |  SABADO   |  DOMINGO  |\n"
-                  "+-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+";
+            "|   HORAS   |   LUNES   |  MARTES   | MIERCOLES |  JUEVES   |  VIERNES  |  SABADO   |  DOMINGO  |\n"
+            "+-----------+-----------+-----------+-----------+-----------+-----------+-----------+-----------+";
     for (int i = 0; i < Rows; i++){
 
         cout << "\n|";
@@ -328,14 +347,22 @@ void PrintMatrix(int* ScheduleMatrix){
         }
 
         for(int j = 0; j < Columns; j++){
-            int Index = (i* Columns) + j;
+            int Index = j * Rows + i;
             cout << "  ";
-            if(ScheduleMatrix[Index] == 0){
+
+            for (int k = 0; HoursStudy[k] != -1; k++){
+                if (Index == HoursStudy[k]){
+                    cout << "\033[D" << "*";
+                    break;
+                }
+            }
+
+            if(ScheduleMatrix[Index] == -1){
                 cout << "         |";
             }
             else{
                 cout << ScheduleMatrix[Index]<< "  |";
-            }
+                }
         }
         if(i == Rows-1){
             break;
@@ -343,25 +370,64 @@ void PrintMatrix(int* ScheduleMatrix){
 
         cout << endl << Division;
     }
-    cout << endl << Division;
+    cout << endl << Division << endl;
+}
+
+int DayInt(char Day){
+
+    int DayAux;
+
+    do{
+    if (Day == 'L' || Day == 'l'){
+        DayAux = 0;
+        break;
+    }
+    else if (Day == 'M' || Day == 'm'){
+        DayAux = 1;
+        break;
+    }
+    else if (Day == 'W' || Day == 'w'){
+        DayAux = 2;
+        break;
+    }
+    else if (Day == 'J' || Day == 'j'){
+        DayAux = 3;
+        break;
+    }
+    else if (Day == 'V' || Day == 'v'){
+        DayAux = 4;
+        break;
+    }
+    else if (Day == 'S' || Day == 's'){
+        DayAux = 5;
+        break;
+    }
+    else if (Day == 'D' || Day == 'd'){
+        DayAux = 6;
+        break;
+    }
+    else{
+        cout << "L(Lunes), M(Martes), W(Miercoles), J (Jueves), V(Viernes), S(Sabado), D(Domingo)\nOpcion erronea. Ingrese nuevamente: ";
+        cin >> Day;
+        cout << "\033[F\033[K\033[F\033[K";
+
+    }
+    }while(true);
+
+    return DayAux;
 }
 
 
-/*void PrintMatrix(int* ScheduleMatrix){
-    int Rows = 16;
-    int Columns = 7;
-    char CenterDivision[] = "╠═══════════╬═══════════╬═══════════╬═══════════╬═══════════╬═══════════╬═══════════╬═══════════╣";
-    char LowerDivision[]  = "╚═══════════╩═══════════╩═══════════╩═══════════╩═══════════╩═══════════╩═══════════╩═══════════╝";
-    cout<< "╔═══════════╦═══════════╦═══════════╦═══════════╦═══════════╦═══════════╦═══════════╦═══════════╗"
-           "║   HORAS   ║   LUNES   ║  MARTES   ║ MIERCOLES ║  JUEVES   ║  VIERNES  ║  SABADO   ║  DOMINGO  ║"
-           "╠═══════════╬═══════════╬═══════════╬═══════════╬═══════════╬═══════════╬═══════════╬═══════════╣";
-    for (int i = 0; i < Rows; i++){
-        cout << "\n║";
-        for(int j = 0; j < Columns; j++){
-            int Index = (i + j) * Rows;
-            cout << "  " << ScheduleMatrix[Index]<< "  ║";
-        }
-        cout << endl << CenterDivision;
-    }
-    cout << endl << LowerDivision;
-}*/
+
+
+
+
+
+
+
+
+
+
+
+
+

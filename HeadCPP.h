@@ -10,8 +10,11 @@ bool PensumReading(char* &Courses, int* &IDECourses, int* &HRSCourses, int* &Ind
 void ViewCourses(char* &Courses, int* &IDECourses, int* &HRSCourses, int* &IndexCourses, int* &ToolsCourses);
 void NameCourse(char* &Courses, int* &IndexCourses, int Index);
 int* CoursesOptions(char* &Courses, int* &IndexCourses, int* &ToolsCourses, int* &HRSCourses);
-void SaveMatrix(int* ScheduleMatrix,  char* outputFilename);
-void PrintMatrix(int* ScheduleMatrix);
+void ClassSchedules(int* &HRS);
+bool ScheduleAvailability(int* ScheduleMatrix, int Day, int Hours, int ClassTime);
+void UpdateMatrix(int* ScheduleMatrix, int* IDECourses, int ChosenCourses, int Day, int Hours, int ClassTime);
+void SaveMatrix(int* ScheduleMatrix, int* HoursStudy);
+void PrintMatrix(int* ScheduleMatrix, int* HoursStudy);
+int DayInt(char Day);
 
-//void PrintMatrix(int* ScheduleMatrix);
 #endif // HEADCPP_H
